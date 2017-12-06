@@ -1,0 +1,18 @@
+﻿<Properties StartupItem="Assembly-CSharp.csproj">
+  <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" PreferredExecutionTarget="Unity.Instance.Unity Editor" />
+  <MonoDevelop.Ide.Workbench ActiveDocument="Assets\AllAssets\Scripts\HexPosition.cs">
+    <Files>
+      <File FileName="Assets\cha_data\Script\CharaView.js" Line="1" Column="15" />
+      <File FileName="Assets\AllAssets\Scripts\Core.cs" Line="268" Column="46" />
+      <File FileName="Assets\AllAssets\Scripts\Unit.cs" Line="136" Column="12" />
+      <File FileName="Assets\AllAssets\Scripts\HexPosition.cs" Line="22" Column="60" />
+      <File FileName="Assets\AllAssets\Scripts\AStar.cs" Line="1" Column="1" />
+      <File FileName="Assets\AllAssets\readme.txt" Line="18" Column="1" />
+      <File FileName="Assets\AllAssets\Scripts\HexaUnit.cs" Line="8" Column="55" />
+    </Files>
+  </MonoDevelop.Ide.Workbench>
+  <MonoDevelop.Ide.DebuggingService.Breakpoints>
+    <BreakpointStore />
+  </MonoDevelop.Ide.DebuggingService.Breakpoints>
+  <MonoDevelop.Ide.DebuggingService.PinnedWatches />
+</Properties>
