@@ -44,19 +44,7 @@ public class HexPosition : System.IEquatable<HexPosition> {
 		return new HexPosition (pair [0], pair [1]);
 	}
 
-	private class Pair<S, T> {
-		private S first;
-		private T second;
 
-		public Pair (S first, T second) {
-			this.first = first;
-			this.second = second;
-		}
-
-		public S First { get { return this.first; } }
-
-		public T Second { get { return this.second; } }
-	}
 
 	/// <summary>
 	/// Initializes a new instance of the <see cref="HexPosition"/> class using the coordinates. This method is not very user-friendly.

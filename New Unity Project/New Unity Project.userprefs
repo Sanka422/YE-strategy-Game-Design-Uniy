@@ -1,14 +1,10 @@
 ﻿<Properties StartupItem="Assembly-CSharp.csproj">
   <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" PreferredExecutionTarget="Unity.Instance.Unity Editor" />
-  <MonoDevelop.Ide.Workbench ActiveDocument="Assets\AllAssets\Scripts\HexPosition.cs">
+  <MonoDevelop.Ide.Workbench ActiveDocument="Assets\cha_data\Script\CharaView.js">
     <Files>
       <File FileName="Assets\cha_data\Script\CharaView.js" Line="1" Column="15" />
-      <File FileName="Assets\AllAssets\Scripts\Core.cs" Line="268" Column="46" />
-      <File FileName="Assets\AllAssets\Scripts\Unit.cs" Line="136" Column="12" />
-      <File FileName="Assets\AllAssets\Scripts\HexPosition.cs" Line="22" Column="60" />
-      <File FileName="Assets\AllAssets\Scripts\AStar.cs" Line="1" Column="1" />
-      <File FileName="Assets\AllAssets\readme.txt" Line="18" Column="1" />
-      <File FileName="Assets\AllAssets\Scripts\HexaUnit.cs" Line="8" Column="55" />
+      <File FileName="Assets\AllAssets\Scripts\Unit.cs" Line="86" Column="18" />
+      <File FileName="Assets\AllAssets\Scripts\Core.cs" Line="319" Column="45" />
     </Files>
   </MonoDevelop.Ide.Workbench>
   <MonoDevelop.Ide.DebuggingService.Breakpoints>

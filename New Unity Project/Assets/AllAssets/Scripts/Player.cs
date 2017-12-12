@@ -3,8 +3,7 @@ using UnityEngine.Networking;
 using System.Collections;
 using System.Collections.Generic;
 
-public class Player : NetworkBehaviour, IPlayerInterface
-{
+public class Player : NetworkBehaviour, IPlayerInterface {
 	public GameObject marker;
 	private List<Unit> units;
 
@@ -12,8 +11,7 @@ public class Player : NetworkBehaviour, IPlayerInterface
 	//private int timeout = 0;		//waiting is still false as this counts down.
 	//private const int MAX_TIME = 1000;
 
-	private enum Turn
-	{
+	private enum Turn {
 		SELECT,
 		MOVE,
 		ATTACK
@@ -28,8 +26,7 @@ public class Player : NetworkBehaviour, IPlayerInterface
 	private bool myTurn = false;
 
 	[ClientRpc]
-	public void RpcSetPlayerNumber (int player)
-	{
+	public void RpcSetPlayerNumber (int player) {
 		if (!isLocalPlayer)
 			return;
 		this.player = player;
@@ -40,8 +37,7 @@ public class Player : NetworkBehaviour, IPlayerInterface
 	}
 
 	[Client]
-	public void moveComplete ()
-	{
+	public void moveComplete () {
 		if (!isLocalPlayer)
 			return;
 		waiting = false;
@@ -54,8 +50,7 @@ public class Player : NetworkBehaviour, IPlayerInterface
 	}
 
 	[Client]
-	public void attackComplete ()
-	{
+	public void attackComplete () {
 		if (!isLocalPlayer)
 			return;
 		waiting = false;
@@ -64,8 +59,7 @@ public class Player : NetworkBehaviour, IPlayerInterface
 	}
 
 	[Client]
-	public void removeUnit (Unit unit)
-	{
+	public void removeUnit (Unit unit) {
 		if (!isLocalPlayer)	//Should always be local player.
 			return;
 		units.Remove (unit);
@@ -73,8 +67,7 @@ public class Player : NetworkBehaviour, IPlayerInterface
 
 	//Returns true if there are any selectable units.
 	[Client]
-	private bool selectSelectable ()
-	{
+	private bool selectSelectable () {
 		bool nonempty = false;
 		foreach (Unit otherUnit in units) {
 			if (otherUnit.PLAYER == player && otherUnit.Status != Unit.State.WAIT) {
@@ -87,20 +80,17 @@ public class Player : NetworkBehaviour, IPlayerInterface
 
 	//TODO: Move to Unit.cs
 	[Client]
-	private bool isAttackable (Unit attacker, Unit attacked, HexPosition coordinates)
-	{
+	private bool isAttackable (Unit attacker, Unit attacked, HexPosition coordinates) {
 		return attacked.PLAYER != player && coordinates.dist (attacked.Coordinates) <= attacker.RANGE;
 	}
 
-	private bool isAttackable (Unit attacker, Unit attacked)
-	{
+	private bool isAttackable (Unit attacker, Unit attacked) {
 		return isAttackable (attacker, attacked, attacker.Coordinates);
 	}
 
 	//Returns true if there's at least one attackable unit.
 	[Client]
-	private bool selectAttackable (Unit attacker, HexPosition coordinates)
-	{
+	private bool selectAttackable (Unit attacker, HexPosition coordinates) {
 		bool nonempty = false;
 		foreach (Unit otherUnit in units) {
 			if (isAttackable (attacker, otherUnit, coordinates)) {
@@ -113,14 +103,12 @@ public class Player : NetworkBehaviour, IPlayerInterface
 
 	//Returns true if there's at least one attackable unit.
 	[Client]
-	private bool selectAttackable (Unit attacker)
-	{
+	private bool selectAttackable (Unit attacker) {
 		return selectAttackable (attacker, attacker.Coordinates);
 	}
 
 	[Client]
-	private void select ()
-	{
+	private void select () {
 		if (mouse.isSelected ("Selectable")) {
 			HexPosition.clearSelection ("Selectable");
 			selection = mouse;
@@ -142,19 +130,17 @@ public class Player : NetworkBehaviour, IPlayerInterface
 	}
 
 	[Client]
-	private void endTurn ()
-	{
+	private void endTurn () {
 		HexPosition.clearSelection ();
 		myTurn = false;
 		CmdEndTurn ();
 	}
 
 	[ClientRpc]
-	public void RpcBeginTurn ()
-	{
+	public void RpcBeginTurn () {
 		if (isLocalPlayer) {
 			foreach (Unit unit in units) {
-				unit.newTurn ();
+				unit.newPhase ();
 			}
 			myTurn = true;
 			selectSelectable ();
@@ -162,8 +148,7 @@ public class Player : NetworkBehaviour, IPlayerInterface
 	}
 
 	[Client]
-	private void unselect ()
-	{
+	private void unselect () {
 		HexPosition.clearSelection ();
 		selection = null;
 		mouse.select ("Cursor");
@@ -174,8 +159,7 @@ public class Player : NetworkBehaviour, IPlayerInterface
 	}
 
 	[Client]
-	private void checkGameOver ()
-	{
+	private void checkGameOver () {
 		gameOver = true;
 		foreach (Unit unit in units) {
 			if (unit.PLAYER != player) {
@@ -186,15 +170,13 @@ public class Player : NetworkBehaviour, IPlayerInterface
 	}
 
 	[Client]
-	private void actuallyAttack ()
-	{
+	private void actuallyAttack () {
 		CmdUnitAttack (HexPosition.hexToIntPair (selection), HexPosition.hexToIntPair (mouse));
 		waiting = true;
 	}
 
 	[Client]
-	private void move ()
-	{
+	private void move () {
 		if (mouse.Equals (selection)) {
 			unselect ();
 		} else if (!mouse.containsKey ("Unit")) {
@@ -216,16 +198,14 @@ public class Player : NetworkBehaviour, IPlayerInterface
 	}
 
 	[Client]
-	private void attack ()
-	{
+	private void attack () {
 		if (mouse.isSelected ("Attack")) {
 			actuallyAttack ();
 		}
 	}
 
 	[Client]
-	private HexPosition getMouseHex ()
-	{
+	private HexPosition getMouseHex () {
 		Ray ray = Camera.main.ScreenPointToRay (Input.mousePosition);
 		RaycastHit[] hits = Physics.RaycastAll (ray);
 		if (hits.Length == 0) {
@@ -244,8 +224,7 @@ public class Player : NetworkBehaviour, IPlayerInterface
 	}
 
 	[Client]
-	void Update ()
-	{
+	void Update () {
 		if (!isLocalPlayer || !myTurn || waiting) {
 			return;
 		}
@@ -304,8 +283,7 @@ public class Player : NetworkBehaviour, IPlayerInterface
 	}
 
 	[Client]
-	void OnGUI ()
-	{
+	void OnGUI () {
 		if (!isLocalPlayer)
 			return;
 		if (gameOver) {
@@ -352,8 +330,7 @@ public class Player : NetworkBehaviour, IPlayerInterface
 	}
 
 	[Client]
-	override public void OnStartLocalPlayer ()
-	{
+	override public void OnStartLocalPlayer () {
 		Object.Destroy (GameObject.FindGameObjectWithTag ("Network Manager HUD").GetComponents<Component> () [2]);
 		HexPosition.setColor ("Path", Color.yellow, 1);
 		HexPosition.setColor ("Selection", Color.green, 2);
@@ -371,54 +348,46 @@ public class Player : NetworkBehaviour, IPlayerInterface
 
 	[Command]
 	private void CmdAddPlayer ()
-	//override public void OnStartServer ()
-	{
+ {	//override public void OnStartServer ()
 		ServerGameController.getSingleton ().addPlayer (this);
 	}
 
 	[Command]
-	private void CmdEndTurn ()
-	{
+	private void CmdEndTurn () {
 		ServerGameController.getSingleton ().endTurn ();
 	}
 
 	[ClientRpc]
-	private void RpcMoveUnit (int[] intString)
-	{
+	private void RpcMoveUnit (int[] intString) {
 		HexPosition[] path = HexPosition.intStringToPath (intString);
 		path [0].getUnit ().move (path);
 	}
 
 	[Command]
-	private void CmdMoveUnit (int[] path)
-	{
+	private void CmdMoveUnit (int[] path) {
 		//foreach (Player player in ServerGameController.getSingleton().getPlayers()) {
 		RpcMoveUnit (path);
 		//}
 	}
 
 	[ClientRpc]
-	private void RpcUnitAttack (int[] attacker, int[] defender, int damage)
-	{
+	private void RpcUnitAttack (int[] attacker, int[] defender, int damage) {
 		Unit unit = HexPosition.intPairToHex (attacker).getUnit ();
 		unit.attack (HexPosition.intPairToHex (defender), damage);
 	}
 
 	[Command]
-	private void CmdUnitAttack (int[] attacker, int[] defender)
-	{
+	private void CmdUnitAttack (int[] attacker, int[] defender) {
 		RpcUnitAttack (attacker, defender, HexPosition.intPairToHex (attacker).getUnit ().getDamage ());
 	}
 
 	[ClientRpc]
-	private void RpcSkipAttack (int[] position)
-	{
+	private void RpcSkipAttack (int[] position) {
 		HexPosition.intPairToHex (position).getUnit ().skipAttack ();
 	}
 
 	[Command]
-	private void CmdUnitSkipAttack (int[] position)
-	{
+	private void CmdUnitSkipAttack (int[] position) {
 		RpcSkipAttack (position);
 	}
 }

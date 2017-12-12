@@ -1,37 +1,4 @@
-HexGrid by Daniel Carrier
-
-Networked.unity and OneComputer.unity are designed to be playable (if not particularly fun) out of the box. It's possible to make something prettier without delving into the code, but I would not recommend it.
-
-How to play:
-
-Each player has two units, a sphere and a cube. The sphere has long range, low speed, low offense, and high HP. The cube has short range, high speed, high offense, and low HP. There is also a grey blob in the middle of the field. This is an obstacle, and cannot be moved through, but has no other effect on the game.
-
-If you're using OneComputer.unity, first, you select one player or two player. If you choose one player, a simple AI takes the place of your opponent. If you use Networked.unity, I'm not actually entirely clear on how that works. I've only tested it on one computer with localhost. I assume you use the IP address you want to connect to if you're the client. Set one computer to the server, and login on the other as the client.
-
-The game starts on Player 1's turn (the red player). Each turn, you can make each of your units move and attack. They can't move after they can attack, but beyond that it's flexible. You can move on unit, then make another unit move and attack, and then make your first unit attack. You can end your turn early by clicking "End Turn", and it will end automatically if there's nothing left you can do. The game ends when one player runs out of units.
-
-The controls would take a while to explain, but they're meant to be intuitive. For the most part, just click on units you want to move, where you want to move them, and who to attack.
-
-Changing the initial position of the units:
-
-Just move them around on the game board. Their initial position isn't stored anywhere. They just move to the center of the nearest hex at the start of the game. To illustrate this, the cubes are actually not quite in the right place initially, but they're fixed when the game starts. The same applies to the grey blob. Just be careful to move the parent empty, not the mesh.
-
-Adding more units:
-
-UnitCube, UnitSphere, UnitCube2, and UnitSphere2 can be copied and pasted and will continue to work appropriately. Just make sure that they stay children of Units.
-
-Adding more unit types:
-
-The easy way is to just copy and paste one of the existing units and altering it. Each unit is made up of a parent, which is an empty running Unit.cs, and a child, which is a model with a collider. The collider is what lets you click on the unit, so if you want to change the model, be sure to give it an appropriate collider. To alter the attributes of the unit, just change the variables in the Unit.cs script. Their use is as follows:
-
-PLAYER:		0 for player 1, and 1 for player 2.
-MAX_HP:		Starting number of hitpoints.
-STRENGTH:	Average damage while attacking.
-VARIATION:	The smaller this is, the less the damage will very. The damage is actually calculated using a negative binomial distribution and then adding one, which means that the minimum damage is one and there's no upper limit regardless of what value you set for VARIATION. There's also a significant rounding error, so take it with a grain of salt.
-SPEED:		How many hexes the unit can move in one turn.
-RANGE:		How far the unit can attack. One means that they can only hit adjacent hexes, two means they can hit hexes adjacent to those, etc.
-
-
+modified from "HexGrid by Daniel Carrier" by Sanka
 
 If you've toyed around enough and you actually want to modify the code, here's overviews of each class. For more details, there's comments in the code itself.
 

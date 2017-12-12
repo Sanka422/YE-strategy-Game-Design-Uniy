@@ -13,18 +13,18 @@ public class Core : MonoBehaviour, IPlayerInterface {
 	/// move then act, act then move, double movement, double action
 	/// end phase
 	/// </summary>
-	private enum Turn {
-		
+	private enum Phase {
 		SELECT,
 		MOVE,
 		ATTACK
 	}
 
-	private Turn turn = Turn.SELECT;
+	private Phase phase = Phase.SELECT;
 	public int PLAYERS = 2;
 	private int player = 0;
 	private HexPosition mouse = null;
 	private HexPosition selection = null;
+	private HexPosition moveFromPos = null;
 	private HexPosition[] path = null;
 	private AI ai;
 	bool gameOver = false;
@@ -90,12 +90,46 @@ public class Core : MonoBehaviour, IPlayerInterface {
 		return selectAttackable (attacker, attacker.Coordinates);
 	}
 
+
+	/// <summary>
+	/// return true if pos x is reachable
+	/// </summary>
+	/// <returns><c>true</c>, if movable was ised, <c>false</c> otherwise.</returns>
+	/// <param name="unit">Unit.</param>
+	/// <param name="coordinates">Coordinates.</param>
+	private bool isMovable (Unit unit, HexPosition coordinates) {
+		if (unit.Coordinates.dist (coordinates) <= unit.SPEED) {
+			if (AStar.search (unit.Coordinates, coordinates, unit.SPEED).Length != 0) {
+				if (!coordinates.containsKey ("Obstacle")) {
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+
+	private bool selectMovable (Unit unit) {
+		bool nonempty = false;
+		for (int i = unit.Coordinates.U - unit.SPEED; i <= unit.Coordinates.U + unit.SPEED; i++) {
+			for (int j = unit.Coordinates.V - unit.SPEED; j <= unit.Coordinates.V + unit.SPEED; j++) {
+				HexPosition moveAbleHex = new HexPosition (i, j);
+				if (isMovable (unit, moveAbleHex)) {
+					moveAbleHex.select ("Movable");
+				}
+			}
+		}
+		return nonempty;
+	}
+
+
+
 	void Start () {
-		HexPosition.setColor ("Path", Color.yellow, 1);
-		HexPosition.setColor ("Selection", Color.green, 2);
-		HexPosition.setColor ("Selectable", Color.green, 3);
-		HexPosition.setColor ("Attack", Color.red, 4);
-		HexPosition.setColor ("Cursor", Color.blue, 5);
+		HexPosition.setColor ("Path", Color.yellow, 2);
+		HexPosition.setColor ("Selection", Color.green, 3);
+		HexPosition.setColor ("Selectable", Color.green, 4);
+		HexPosition.setColor ("Attack", Color.red, 5);
+		HexPosition.setColor ("Cursor", Color.blue, 6);
+		HexPosition.setColor ("Movable", Color.cyan, 1);
 		HexPosition.Marker = marker;
 		foreach (GameObject child in GameObject.FindGameObjectsWithTag("Obstacle")) {
 			HexPosition position = new HexPosition (child.transform.position);
@@ -114,13 +148,14 @@ public class Core : MonoBehaviour, IPlayerInterface {
 			selection = mouse;
 			mouse.select ("Selection");
 			Unit unit = mouse.getUnit ();
-			selectAttackable (unit);
+			selectMovable (unit);
+			moveFromPos = unit.Coordinates;
 			switch (unit.Status) {
 			case Unit.State.MOVE:
-				turn = Turn.MOVE;
+				phase = Phase.MOVE;
 				break;
 			case Unit.State.ATTACK:
-				turn = Turn.ATTACK;
+				phase = Phase.ATTACK;
 				break;
 			default:
 				print ("Error: Action " + unit.Status + " not implemented.");
@@ -129,10 +164,10 @@ public class Core : MonoBehaviour, IPlayerInterface {
 		}
 	}
 
-	public void endTurn () {
+	public void endPhase () {
 		HexPosition.clearSelection ();
-		foreach (Unit unit in units) {	//I only need to do this with units on that team, but checking won't speed things up. I could also only do it when player overflows.
-			unit.newTurn ();
+		foreach (Unit unit in units) {	
+			unit.newPhase ();
 		}
 		player = (player + 1) % PLAYERS;
 		if (player == 0 || !computerPlayer) {
@@ -145,9 +180,9 @@ public class Core : MonoBehaviour, IPlayerInterface {
 		selection = null;
 		mouse.select ("Cursor");
 		if (!(selectSelectable () || gameOver)) {
-			endTurn ();
+			endPhase ();
 		}
-		turn = Turn.SELECT;
+		phase = Phase.SELECT;
 	}
 
 	private void checkGameOver () {
@@ -178,21 +213,13 @@ public class Core : MonoBehaviour, IPlayerInterface {
 				selection = mouse;
 				selection.select ("Selection");
 				if (selectAttackable (myUnit)) {
-					turn = Turn.ATTACK;
+					phase = Phase.ATTACK;
 				} else {
 					myUnit.skipAttack ();
 					unselect ();
 				}
 			}
-		} else {
-			Unit enemy = mouse.getUnit ();
-			if (enemy != null) {
-				Unit myUnit = selection.getUnit ();
-				if (isAttackable (myUnit, enemy)) {
-					actuallyAttack ();
-				}
-			}
-		}
+		} 
 	}
 
 	private void attack () {
@@ -230,7 +257,7 @@ public class Core : MonoBehaviour, IPlayerInterface {
 		}
 		if (player == 1 && computerPlayer) {
 			if (ai.go ()) {
-				endTurn ();
+				endPhase ();
 			}
 			checkGameOver ();
 			return;
@@ -238,58 +265,66 @@ public class Core : MonoBehaviour, IPlayerInterface {
 		if (!Input.mousePresent) {
 			mouse = null;
 		} else {
-			if (Input.GetMouseButtonDown (0)) {
-				HexPosition newMouse = getMouseHex ();
-				if (newMouse == null) {
-					HexPosition.clearSelection ("Path");
-					HexPosition.clearSelection ("Attack");
-					path = null;
-				} else {
-					if (newMouse != mouse) {
-						if (mouse != null) {
-							mouse.unselect ("Cursor");
-						}
-						if (newMouse.containsKey ("Obstacle")) {	//The Obstacle tag is being used to make the tile unselectable.
-							if (mouse != null && turn == Turn.MOVE) {
-								HexPosition.clearSelection ("Path");
-								HexPosition.clearSelection ("Attack");
-								path = null;
-							}
-							mouse = null;
-							return;
-						}
-						mouse = newMouse;
-						mouse.select ("Cursor");
-						if (turn == Turn.MOVE) {
-							//search all possible move and desplay
-							///todo//////////
-							Unit unit = selection.getUnit ();
+			HexPosition newMouse = getMouseHex ();
+			if (newMouse == null) {
+				HexPosition.clearSelection ("Path");
+				HexPosition.clearSelection ("Attack");
+				path = null;
+			} else {
+				if (newMouse != mouse) {
+					if (mouse != null) {
+						mouse.unselect ("Cursor");
+					}
+					if (newMouse.containsKey ("Obstacle")) {	//The Obstacle tag is being used to make the tile unselectable.
+						if (mouse != null && phase == Phase.MOVE) {
 							HexPosition.clearSelection ("Path");
 							HexPosition.clearSelection ("Attack");
-							path = AStar.search (selection, mouse, unit.SPEED);
-							HexPosition.select ("Path", path);
-							selectAttackable (unit, mouse);
+							path = null;
 						}
-					}
-					if (Input.GetButtonDown ("Fire1")) {
-						switch (turn) {
-						case Turn.SELECT:
-							select ();
-							break;
-						case Turn.MOVE:
-							move ();
-							break;
-						case Turn.ATTACK:
-							attack ();
-							break;
-						default:
-							print ("Error: Turn " + turn + " not implemented.");
-							break;
-						}
+						mouse = null;
 						return;
 					}
+					mouse = newMouse;
+					//display where the cursor is pointing at
+					mouse.select ("Cursor");
+					//if is in move phase, also display the route toward where the cursor is current at
+					if (phase == Phase.MOVE) {
+						Unit unit = selection.getUnit ();
+						HexPosition.clearSelection ("Path");
+						HexPosition.clearSelection ("Attack");
+						path = AStar.search (selection, mouse, unit.SPEED);
+						HexPosition.select ("Path", path);
+					}
+				}
+				if (Input.GetMouseButtonDown (0)) {
+					switch (phase) {
+					case Phase.SELECT:
+						select ();
+						break;
+					case Phase.MOVE:
+						move ();
+						break;
+					case Phase.ATTACK:
+						attack ();
+						break;
+					default:
+						print ("Error: Turn " + phase + " not implemented.");
+						break;
+					}
+					return;
+				} else if (Input.GetMouseButtonDown (1)) {
+					HexPosition.clearSelection ("Path");
+					HexPosition.clearSelection ("Attack");
+					HexPosition.clearSelection ("Movable");
+					HexPosition.clearSelection ("Selection");
+					phase = Phase.SELECT;
+					Unit unit = selection.getUnit ();
+					unit.undoMovement (moveFromPos);
+					unit.setState (Unit.State.MOVE);
+					selectSelectable ();
 				}
 			}
+			
 		}
 	}
 
@@ -321,20 +356,20 @@ public class Core : MonoBehaviour, IPlayerInterface {
 			return;
 		}
 		GUI.Box (new Rect (10, 10, 90, 20), "Player " + (player + 1));
-		switch (turn) {
-		case Turn.SELECT:
+		switch (phase) {
+		case Phase.SELECT:
 			GUI.Box (new Rect (10, 40, 90, 20), "Select");
 			if (GUI.Button (new Rect (10, 70, 90, 20), "End Turn")) {
-				endTurn ();
+				endPhase ();
 			}
 			break;
-		case Turn.MOVE:
+		case Phase.MOVE:
 			GUI.Box (new Rect (10, 40, 90, 20), "Move");
 			if (GUI.Button (new Rect (10, 70, 90, 20), "Cancel Move")) {
 				unselect ();
 			}
 			break;
-		case Turn.ATTACK:
+		case Phase.ATTACK:
 			GUI.Box (new Rect (10, 40, 90, 20), "Attack");
 			if (GUI.Button (new Rect (10, 70, 90, 20), "Skip Attack")) {
 				HexPosition.clearSelection ();
@@ -343,7 +378,7 @@ public class Core : MonoBehaviour, IPlayerInterface {
 					mouse.select ("Cursor");
 				}
 				selectSelectable ();
-				turn = Turn.SELECT;
+				phase = Phase.SELECT;
 			}
 			break;
 		}

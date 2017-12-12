@@ -1,0 +1,5 @@
+主题 攻略副本；培养角色；培养公会；探索攻略boss
+theme explore dungeon, develop characters, develop guild, explore and beat the boss (like first kill)
+
+事件：各种网游游戏发生的事情，如 外挂，bug（复制金币、道具），技能调整，新增职业，技能，道具交易诈骗
+event： all kind of event occured in mmorpg, i.e. cheat, bug(duplicate gold, item，improve balance(modify skill),new class, skill, item trading scams

@@ -39,15 +39,18 @@ public class Unit : MonoBehaviour {
 			return hp;
 		}
 	}
-	
-	/*void SetPosition (HexPosition position) {
+
+	public  void setState (State s) {
+		state = s;
+	}
+
+	public void SetPosition (HexPosition position) {
 		this.position = position;
 		transform.position = position.getPosition ();
 		position.add ("Unit", this);
-		grid.SendMessage ("ActionComplete");
 	}
 	
-	public void Move (HexPosition desitination) {
+	/*public void Move (HexPosition desitination) {
 		grid.SendMessage ("MessageRecieved");
 		if (desitination.containsKey ("Unit")) {
 			grid.SendMessage ("ActionComplete");
@@ -73,6 +76,14 @@ public class Unit : MonoBehaviour {
 
 	public State Status {
 		get { return state; }
+	}
+
+	public void undoMovement (HexPosition pos) {
+		state = State.MOVE;
+		position.remove ("Unit");
+		pos.add ("Unit", this);
+		SetPosition (pos);
+		moving = false;
 	}
 
 	public void move (HexPosition[] path) {
@@ -119,7 +130,7 @@ public class Unit : MonoBehaviour {
 		attackComplete ();
 	}
 
-	public void newTurn () {
+	public void newPhase () {
 		state = State.MOVE;
 	}
 
@@ -208,10 +219,10 @@ public class Unit : MonoBehaviour {
 					return;
 				} else {
 					//transform.position = bezier (path[0], (2*path[1]+path[0])/3, (2*path[1]+path[2])/3, path[2], t/2);
-					Vector3 position;
+					Vector3 pos;
 					Quaternion rotation;
-					fullBezier (path [0], (2 * path [1] + path [0]) / 3, (2 * path [1] + path [2]) / 3, path [2], t / 2, out position, out rotation);
-					transform.position = position;
+					fullBezier (path [0], (2 * path [1] + path [0]) / 3, (2 * path [1] + path [2]) / 3, path [2], t / 2, out pos, out rotation);
+					transform.position = pos;
 					transform.rotation = rotation;
 					t += MOTION_SPEED;
 				}
@@ -232,10 +243,10 @@ public class Unit : MonoBehaviour {
 						++n;	//Falls through.
 					} else {
 						//transform.position = bezier ((path[n-1]+path[n])/2, (5*path[n]+path[n-1])/6, (5*path[n]+path[n+1])/6, (path[n+1]+path[n])/2, t);
-						Vector3 position;
+						Vector3 pos;
 						Quaternion rotation;
-						fullBezier ((path [n - 1] + path [n]) / 2, (5 * path [n] + path [n - 1]) / 6, (5 * path [n] + path [n + 1]) / 6, (path [n + 1] + path [n]) / 2, t, out position, out rotation);
-						transform.position = position;
+						fullBezier ((path [n - 1] + path [n]) / 2, (5 * path [n] + path [n - 1]) / 6, (5 * path [n] + path [n + 1]) / 6, (path [n + 1] + path [n]) / 2, t, out pos, out rotation);
+						transform.position = pos;
 						transform.rotation = rotation;
 						t += MOTION_SPEED;
 					}
